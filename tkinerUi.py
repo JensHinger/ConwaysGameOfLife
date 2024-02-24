@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from game import Game
+from timer_decorator import measure_time
 
 class MainWindow(tk.Tk):
 
@@ -145,6 +146,7 @@ class MainWindow(tk.Tk):
         self.minsize(800, 800)
         self.mainloop()
 
+    @measure_time
     def loop(self):
         # TODO make more beautiful / Performant not using self.after -> multithread?
         self.game.step()
@@ -160,6 +162,7 @@ class MainWindow(tk.Tk):
         self.game.clear_field()
         self.draw_game_field()
 
+    @measure_time
     def draw_game_field(self):
         for y in range(len(self.game.game_field)):
             for x in range(len(self.game.game_field)):
@@ -213,6 +216,7 @@ class MainWindow(tk.Tk):
             self.un_pause_button["text"] = "Un-pause"
             self.pause_active = True
 
+    @measure_time
     def create_grid(self):
         
         for y in range(0, self.canvas_height, self.line_dist):
