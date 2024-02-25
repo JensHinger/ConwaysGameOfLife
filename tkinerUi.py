@@ -9,7 +9,7 @@ class MainWindow(tk.Tk):
         super().__init__()
 
         self.game_size = 40
-        self.line_dist = 10
+        self.line_dist = 20
         self.canvas_width = self.line_dist * self.game_size
         self.canvas_height = self.line_dist * self.game_size
 
@@ -21,7 +21,7 @@ class MainWindow(tk.Tk):
         self.template = tk.IntVar()
         
         # TODO load in from json
-        self.available_templates = ["No Template","Glider", "Blinker", "Penis", "Loafer"]
+        self.available_templates = ["No Template","Glider", "Blinker", "Quad Blinker", "Loafer"]
         self.template_list_templates = [
             [[1]]
             ,
@@ -35,7 +35,8 @@ class MainWindow(tk.Tk):
             ,
             [[1, 0, 0],
             [1, 1, 1],
-            [1, 0, 0]],
+            [1, 0, 0]]
+            ,
             [[0, 1, 1, 0, 0, 1, 0, 1, 1],
             [1, 0, 0, 1, 0, 0, 1, 1, 0],
             [0, 1, 0, 1, 0, 0, 0, 0, 0],
@@ -44,8 +45,7 @@ class MainWindow(tk.Tk):
             [0, 0, 0, 0, 0, 0, 1, 1, 1],
             [0, 0, 0, 0, 0, 1, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 1, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 1, 1]
-            ]
+            [0, 0, 0, 0, 0, 0, 0, 1, 1]]
         ]
 
         # Window Heading
@@ -131,14 +131,13 @@ class MainWindow(tk.Tk):
             width=self.canvas_width,
             height=self.canvas_height,
             background="gray90",
+            borderwidth=0,
+            highlightthickness=0
         )
         self.game_canvas.pack()
         self.create_grid()
 
         self.game_canvas.bind("<ButtonPress-1>", self.handle_click)
-
-        self.draw_game_field()
-        self.loop()
 
         self.columnconfigure(0, weight=2)
         self.columnconfigure(1, weight=8)
@@ -152,7 +151,7 @@ class MainWindow(tk.Tk):
         self.game.step()
         self.draw_game_field()
         if not self.pause_active:
-            self.after(100, self.loop)
+            self.after(50, self.loop)
 
     def init_random(self):
         self.game.init_random_field()
@@ -162,7 +161,6 @@ class MainWindow(tk.Tk):
         self.game.clear_field()
         self.draw_game_field()
 
-    @measure_time
     def draw_game_field(self):
         for y in range(len(self.game.game_field)):
             for x in range(len(self.game.game_field)):
@@ -218,12 +216,6 @@ class MainWindow(tk.Tk):
 
     @measure_time
     def create_grid(self):
-        
-        for y in range(0, self.canvas_height, self.line_dist):
-            self.game_canvas.create_line(0, y, self.canvas_width, y, fill="#476042")
-
-        for x in range(0, self.canvas_width, self.line_dist):
-            self.game_canvas.create_line(x, 0, x, self.canvas_height, fill="#476042")
 
         for y in range(int(self.canvas_width/self.line_dist)):
             self.canvas_rects.append([])
@@ -231,9 +223,10 @@ class MainWindow(tk.Tk):
                 self.canvas_rects[y].append(self.game_canvas.create_rectangle(
                     x * self.line_dist, 
                     y * self.line_dist,
-                    (x + 1) * self.line_dist,
-                    (y + 1) * self.line_dist,
-                    fill="white"
+                    (x + 1) * self.line_dist - 1,
+                    (y + 1) * self.line_dist - 1,
+                    fill="white",
+                    activestipple="gray50"
                 )
             )
 

@@ -1,4 +1,5 @@
 import random
+from timer_decorator import measure_time
 # TODO: Add comments
 class Game:
 
