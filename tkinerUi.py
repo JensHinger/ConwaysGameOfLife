@@ -14,6 +14,9 @@ class MainWindow(tk.Tk):
         self.canvas_height = self.line_dist * self.game_size
 
         self.pause_active = True
+        self.is_hovering = False
+        self.hover_x = 0
+        self.hover_y = 0
 
         self.canvas_rects = []
         self.game = Game(self.game_size)
@@ -139,6 +142,10 @@ class MainWindow(tk.Tk):
 
         self.game_canvas.bind("<ButtonPress-1>", self.handle_click)
 
+        self.game_canvas.bind("<Enter>", self.handle_enter)
+        self.game_canvas.bind("<Leave>", self.handle_leave)
+        self.game_canvas.bind("<Motion>", self.handle_hover)
+
         self.columnconfigure(0, weight=2)
         self.columnconfigure(1, weight=8)
 
@@ -150,6 +157,10 @@ class MainWindow(tk.Tk):
         # TODO make more beautiful / Performant not using self.after -> multithread?
         self.game.step()
         self.draw_game_field()
+
+        if self.is_hovering:
+            self.draw_preview(self.hover_x, self.hover_y)
+
         if not self.pause_active:
             self.after(50, self.loop)
 
@@ -167,9 +178,32 @@ class MainWindow(tk.Tk):
                 fill_value = "black" if self.game.game_field[y][x] == 1 else "white"
                 self.game_canvas.itemconfig(self.canvas_rects[y][x], fill=fill_value)
 
+    def draw_preview(self, x, y, delete=False):
+        affected_cells = self.get_template_cells(x, y, self.template_list_templates[self.template.get()])
+        for cell in affected_cells:
+            if cell[2] == 1:
+                self.game_canvas.itemconfig(self.canvas_rects[cell[1]][cell[0]], fill="gray" if not delete else "white")
+
+    def handle_hover(self, event):
+        x, y = self.cells_from_coords(event.x, event.y)
+
+        if self.pause_active:
+            self.draw_game_field()
+            self.draw_preview(x, y)
+        else:
+            self.hover_x = x
+            self.hover_y = y
+
+    def handle_enter(self, event):
+        self.is_hovering = True
+
+    def handle_leave(self, event):
+        if self.pause_active:
+            self.draw_game_field()
+        self.is_hovering = False
+
     def handle_click(self, event):
-        x = int(event.x / self.line_dist)
-        y = int(event.y / self.line_dist)
+        x, y = self.cells_from_coords(event.x, event.y)
         
         if x > len(self.canvas_rects) - 1 or y > len(self.canvas_rects) - 1:
             return
@@ -179,7 +213,15 @@ class MainWindow(tk.Tk):
         else:
             self.template_click(x, y, self.template_list_templates[self.template.get()])
 
-    def template_click(self, x, y, template):
+    def cells_from_coords(self, x, y):
+        x = int(x / self.line_dist)
+        y = int(y / self.line_dist)
+
+        return x, y
+
+    def get_template_cells(self, x, y, template):
+        affected_cells = []
+
         center_temp_y = int(1/2 * len(template))
 
         for temp_y in range(-center_temp_y, center_temp_y + 1):
@@ -189,10 +231,21 @@ class MainWindow(tk.Tk):
                 current_x = (temp_x + x)
                 current_y = (temp_y + y)
 
+                affected_cells.append([current_x % self.game_size,
+                                       current_y % self.game_size,
+                                       template[temp_y + center_temp_y][temp_x + center_temp_x]])
+                
+        return affected_cells
+
+    def template_click(self, x, y, template):
+        affected_cells = self.get_template_cells(x, y, template)
+
+        for cell in affected_cells:
+            if cell[2] == 1:
                 self.change_cell(
-                    current_x % self.game_size,
-                    current_y % self.game_size,
-                    template[temp_y + center_temp_y][temp_x + center_temp_x]
+                    cell[0],
+                    cell[1],
+                    cell[2]
                 )
 
     def no_template_click(self, x, y):

@@ -56,6 +56,4 @@ class Game:
         self.game_field = next_field
 
 if __name__ == "__main__":
-    game = init_random_field(5)
-    n = game._get_alive_neighbors(4, 4)
-    print(n)
+    pass
